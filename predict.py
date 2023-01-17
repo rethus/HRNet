@@ -23,7 +23,7 @@ def predict_single_person():
     flip_test = True
     resize_hw = (256, 192)
     img_path = "./person.png"
-    weights_path = "./pose_hrnet_w32_256x192.pth"
+    weights_path = "pre_train/pose_hrnet_w32_256x192.pth"
     keypoint_json_path = "person_keypoints.json"
     assert os.path.exists(img_path), f"file: {img_path} does not exist."
     assert os.path.exists(weights_path), f"file: {weights_path} does not exist."

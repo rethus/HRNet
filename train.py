@@ -16,16 +16,15 @@ def create_model(num_joints, load_pretrain_weights=True):
     model = HighResolutionNet(base_channel=32, num_joints=num_joints)
 
     if load_pretrain_weights:
-        # 载入预训练模型权重
-        # 链接:https://pan.baidu.com/s/1Lu6mMAWfm_8GGykttFMpVw 提取码:f43o
-        weights_dict = torch.load("./hrnet_w32.pth", map_location='cpu')
+        # 载入预训练模型权重 √
+        weights_dict = torch.load("pre_train/hrnet_w32.pth", map_location='cpu')
 
         for k in list(weights_dict.keys()):
-            # 如果载入的是imagenet权重，就删除无用权重
+            # 如果载入的是imagenet权重，就删除无用权重 √
             if ("head" in k) or ("fc" in k):
                 del weights_dict[k]
 
-            # 如果载入的是coco权重，对比下num_joints，如果不相等就删除
+            # 如果载入的是coco权重，对比下num_joints，如果不相等就删除 √
             if "final_layer" in k:
                 if weights_dict[k].shape[0] != num_joints:
                     del weights_dict[k]
@@ -51,25 +50,30 @@ def main(args):
     heatmap_hw = (args.fixed_size[0] // 4, args.fixed_size[1] // 4)
     kps_weights = np.array(person_kps_info["kps_weights"],
                            dtype=np.float32).reshape((args.num_joints,))
+    # 数据增强 √
     data_transform = {
         "train": transforms.Compose([
+            # 随机裁剪半身
             transforms.HalfBody(0.3, person_kps_info["upper_body_ids"], person_kps_info["lower_body_ids"]),
+            # 2D仿射变换
             transforms.AffineTransform(scale=(0.65, 1.35), rotation=(-45, 45), fixed_size=fixed_size),
+            # 随机水平翻转
             transforms.RandomHorizontalFlip(0.5, person_kps_info["flip_pairs"]),
+            # 转化热力图
             transforms.KeypointToHeatMap(heatmap_hw=heatmap_hw, gaussian_sigma=2, keypoints_weights=kps_weights),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ]),
         "val": transforms.Compose([
+            # 检测框放大1.25倍
             transforms.AffineTransform(scale=(1.25, 1.25), fixed_size=fixed_size),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
     }
-
+    # 数据的根目录 √
     data_root = args.data_path
-
-    # load train data set
+    # 加载训练集 √
     # coco2017 -> annotations -> person_keypoints_train2017.json
     train_dataset = CocoKeypoint(data_root, "train", transforms=data_transform["train"], fixed_size=args.fixed_size)
 
@@ -85,7 +89,7 @@ def main(args):
                                         num_workers=nw,
                                         collate_fn=train_dataset.collate_fn)
 
-    # load validation data set
+    # 加载测试集 √
     # coco2017 -> annotations -> person_keypoints_val2017.json
     val_dataset = CocoKeypoint(data_root, "val", transforms=data_transform["val"], fixed_size=args.fixed_size,
                                det_json_path=args.person_det)
@@ -96,13 +100,13 @@ def main(args):
                                       num_workers=nw,
                                       collate_fn=val_dataset.collate_fn)
 
-    # create model
+    # 模型初始化 √
     model = create_model(num_joints=args.num_joints)
     # print(model)
-
+    # 加载GPU或CPU √
     model.to(device)
 
-    # define optimizer
+    # define optimizer √
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(params,
                                   lr=args.lr,
@@ -110,10 +114,11 @@ def main(args):
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
-    # learning rate scheduler
+    # learning rate scheduler √
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_steps, gamma=args.lr_gamma)
 
     # 如果指定了上次训练保存的权重文件地址，则接着上次结果接着训练
+    # 使用中断前的参数 √
     if args.resume != "":
         checkpoint = torch.load(args.resume, map_location='cpu')
         model.load_state_dict(checkpoint['model'])
@@ -128,6 +133,7 @@ def main(args):
     learning_rate = []
     val_map = []
 
+    # 训练epoch次 √
     for epoch in range(args.start_epoch, args.epochs):
         # train for one epoch, printing every 50 iterations
         mean_loss, lr = utils.train_one_epoch(model, optimizer, train_data_loader,
