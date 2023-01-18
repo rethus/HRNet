@@ -19,33 +19,36 @@ def predict_all_person():
 def predict_single_person():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"using device: {device}")
-
+    # 翻转图片再测一次，取平均 √
     flip_test = True
     resize_hw = (256, 192)
     img_path = "./person.png"
-    weights_path = "pre_train/pose_hrnet_w32_256x192.pth"
+    weights_path = "pre_train/pose_coco/pose_hrnet_w32_256x192.pth"
     keypoint_json_path = "person_keypoints.json"
+
     assert os.path.exists(img_path), f"file: {img_path} does not exist."
     assert os.path.exists(weights_path), f"file: {weights_path} does not exist."
     assert os.path.exists(keypoint_json_path), f"file: {keypoint_json_path} does not exist."
 
+    # 数据增强 √
     data_transform = transforms.Compose([
         transforms.AffineTransform(scale=(1.25, 1.25), fixed_size=resize_hw),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    # read json file
+    # read json file √
     with open(keypoint_json_path, "r") as f:
         person_info = json.load(f)
 
-    # read single-person image
+    # read single-person image √
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_tensor, target = data_transform(img, {"box": [0, 0, img.shape[1] - 1, img.shape[0] - 1]})
+
     img_tensor = torch.unsqueeze(img_tensor, dim=0)
 
-    # create model
+    # create model √
     # HRNet-W32: base_channel=32
     # HRNet-W48: base_channel=48
     model = HighResolutionNet(base_channel=32)

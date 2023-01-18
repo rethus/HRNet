@@ -9,12 +9,14 @@ from torchvision.transforms import functional as F
 import matplotlib.pyplot as plt
 
 
+# 翻转图像 √
 def flip_images(img):
     assert len(img.shape) == 4, 'images has to be [batch_size, channels, height, width]'
     img = torch.flip(img, dims=[3])
     return img
 
 
+# 翻转回来图像 √
 def flip_back(output_flipped, matched_parts):
     assert len(output_flipped.shape) == 4, 'output_flipped has to be [batch_size, num_joints, height, width]'
     output_flipped = torch.flip(output_flipped, dims=[3])
@@ -27,6 +29,7 @@ def flip_back(output_flipped, matched_parts):
     return output_flipped
 
 
+# 选择最大预测热力图 √
 def get_max_preds(batch_heatmaps):
     """
     get predictions from score maps
@@ -118,8 +121,8 @@ def decode_keypoints(outputs, origin_hw, num_joints: int = 17):
 
 def resize_pad(img: np.ndarray, size: tuple):
     h, w, c = img.shape
-    src = np.array([[0, 0],       # 原坐标系中图像左上角点
-                    [w - 1, 0],   # 原坐标系中图像右上角点
+    src = np.array([[0, 0],  # 原坐标系中图像左上角点
+                    [w - 1, 0],  # 原坐标系中图像右上角点
                     [0, h - 1]],  # 原坐标系中图像左下角点
                    dtype=np.float32)
     dst = np.zeros((3, 2), dtype=np.float32)
@@ -127,14 +130,14 @@ def resize_pad(img: np.ndarray, size: tuple):
         # 需要在w方向padding
         wi = size[0] * (w / h)
         pad_w = (size[1] - wi) / 2
-        dst[0, :] = [pad_w - 1, 0]            # 目标坐标系中图像左上角点
+        dst[0, :] = [pad_w - 1, 0]  # 目标坐标系中图像左上角点
         dst[1, :] = [size[1] - pad_w - 1, 0]  # 目标坐标系中图像右上角点
         dst[2, :] = [pad_w - 1, size[0] - 1]  # 目标坐标系中图像左下角点
     else:
         # 需要在h方向padding
         hi = size[1] * (h / w)
         pad_h = (size[0] - hi) / 2
-        dst[0, :] = [0, pad_h - 1]            # 目标坐标系中图像左上角点
+        dst[0, :] = [0, pad_h - 1]  # 目标坐标系中图像左上角点
         dst[1, :] = [size[1] - 1, pad_h - 1]  # 目标坐标系中图像右上角点
         dst[2, :] = [0, size[0] - pad_h - 1]  # 目标坐标系中图像左下角点
 
@@ -201,6 +204,7 @@ def plot_heatmap(image, heatmap, kps, kps_weights):
 
 class Compose(object):
     """组合多个transform函数"""
+
     def __init__(self, transforms):
         self.transforms = transforms
 
@@ -212,6 +216,7 @@ class Compose(object):
 
 class ToTensor(object):
     """将PIL图像转为Tensor"""
+
     def __call__(self, image, target):
         image = F.to_tensor(image)
         return image, target
@@ -273,9 +278,10 @@ class HalfBody(object):
 
 class AffineTransform(object):
     """scale+rotation"""
+
     def __init__(self,
                  scale: Tuple[float, float] = None,  # e.g. (0.65, 1.35)
-                 rotation: Tuple[int, int] = None,   # e.g. (-45, 45)
+                 rotation: Tuple[int, int] = None,  # e.g. (-45, 45)
                  fixed_size: Tuple[int, int] = (256, 192)):
         self.scale = scale
         self.rotation = rotation
@@ -287,7 +293,7 @@ class AffineTransform(object):
         src_h = src_ymax - src_ymin
         src_center = np.array([(src_xmin + src_xmax) / 2, (src_ymin + src_ymax) / 2])
         src_p2 = src_center + np.array([0, -src_h / 2])  # top middle
-        src_p3 = src_center + np.array([src_w / 2, 0])   # right middle
+        src_p3 = src_center + np.array([src_w / 2, 0])  # right middle
 
         dst_center = np.array([(self.fixed_size[1] - 1) / 2, (self.fixed_size[0] - 1) / 2])
         dst_p2 = np.array([(self.fixed_size[1] - 1) / 2, 0])  # top middle
@@ -298,7 +304,7 @@ class AffineTransform(object):
             src_w = src_w * scale
             src_h = src_h * scale
             src_p2 = src_center + np.array([0, -src_h / 2])  # top middle
-            src_p3 = src_center + np.array([src_w / 2, 0])   # right middle
+            src_p3 = src_center + np.array([src_w / 2, 0])  # right middle
 
         if self.rotation is not None:
             angle = random.randint(*self.rotation)  # 角度制
@@ -338,6 +344,7 @@ class AffineTransform(object):
 
 class RandomHorizontalFlip(object):
     """随机对输入图片进行水平翻转，注意该方法必须接在 AffineTransform 后"""
+
     def __init__(self, p: float = 0.5, matched_parts: list = None):
         assert matched_parts is not None
         self.p = p

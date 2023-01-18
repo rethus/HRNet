@@ -4,7 +4,7 @@ import PIL
 from PIL import ImageDraw, ImageFont
 from PIL.Image import Image
 
-# COCO 17 points
+# COCO 17 points √
 point_name = ["nose", "left_eye", "right_eye",
               "left_ear", "right_ear",
               "left_shoulder", "right_shoulder",
@@ -13,7 +13,7 @@ point_name = ["nose", "left_eye", "right_eye",
               "left_hip", "right_hip",
               "left_knee", "right_knee",
               "left_ankle", "right_ankle"]
-
+# 关键点颜色  √
 point_color = [(240, 2, 127), (240, 2, 127), (240, 2, 127),
                (240, 2, 127), (240, 2, 127),
                (255, 255, 51), (255, 255, 51),
@@ -25,7 +25,7 @@ point_color = [(240, 2, 127), (240, 2, 127), (240, 2, 127),
                (255, 255, 0), (169, 209, 142),
                (255, 255, 0), (169, 209, 142)]
 
-
+# 画关键点 √
 def draw_keypoints(img: Image,
                    keypoints: ndarray,
                    scores: ndarray = None,
