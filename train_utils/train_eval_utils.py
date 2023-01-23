@@ -91,7 +91,6 @@ def evaluate(model, data_loader, device, flip=False, flip_pairs=None):
             flipped_outputs = model(flipped_images)
             flipped_outputs = transforms.flip_back(flipped_outputs, flip_pairs)
             # feature is not aligned, shift flipped heatmap for higher accuracy
-            # https://github.com/leoxiaobin/deep-high-resolution-net.pytorch/issues/22
             flipped_outputs[..., 1:] = flipped_outputs.clone()[..., 0:-1]
             outputs = (outputs + flipped_outputs) * 0.5
 

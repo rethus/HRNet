@@ -406,7 +406,7 @@ class KeypointToHeatMap(object):
             kps_weights = visible
 
         heatmap = np.zeros((num_kps, self.heatmap_hw[0], self.heatmap_hw[1]), dtype=np.float32)
-        heatmap_kps = (kps / 4 + 0.5).astype(np.int)  # round
+        heatmap_kps = (kps / 4 + 0.5).astype(int)  # round
         for kp_id in range(num_kps):
             v = kps_weights[kp_id]
             if v < 0.5:
