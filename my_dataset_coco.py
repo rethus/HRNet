@@ -7,6 +7,7 @@ import cv2
 import torch.utils.data as data
 from pycocotools.coco import COCO
 
+
 class CocoKeypoint(data.Dataset):
     def __init__(self,
                  root,
@@ -101,7 +102,7 @@ class CocoKeypoint(data.Dataset):
 
 
 if __name__ == '__main__':
-    train = CocoKeypoint("/data/coco2017/", dataset="val")
+    train = CocoKeypoint("dataset/COCO2017/", dataset="val")
     print(len(train))
     t = train[0]
-    print(t)
+    print(train.collate_fn())

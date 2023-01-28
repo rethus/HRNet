@@ -20,7 +20,7 @@ def create_model(num_joints, load_pretrain_weights=True):
     if load_pretrain_weights:
         # 载入预训练模型权重
         # 链接:https://pan.baidu.com/s/1Lu6mMAWfm_8GGykttFMpVw 提取码:f43o
-        weights_dict = torch.load("./hrnet_w32.pth", map_location='cpu')
+        weights_dict = torch.load("pre_train/pose_coco/pose_hrnet_w32_256x192.pth", map_location='cpu')
 
         for k in list(weights_dict.keys()):
             # 如果载入的是imagenet权重，就删除无用权重
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         description=__doc__)
 
     # 训练文件的根目录(coco2017)
-    parser.add_argument('--data-path', default='/data/coco2017', help='dataset')
+    parser.add_argument('--data-path', default='dataset/COCO2017', help='dataset')
     # 训练设备类型
     parser.add_argument('--device', default='cuda', help='device')
     # COCO数据集人体关键点信息

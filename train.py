@@ -77,6 +77,10 @@ def main(args):
     # coco2017 -> annotations -> person_keypoints_train2017.json
     train_dataset = CocoKeypoint(data_root, "train", transforms=data_transform["train"], fixed_size=args.fixed_size)
 
+    print(train_dataset)
+    for i, j in enumerate(train_dataset):
+        print(j)
+    exit()
     # 注意这里的collate_fn是自定义的，因为读取的数据包括image和targets，不能直接使用默认的方法合成batch
     batch_size = args.batch_size
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
