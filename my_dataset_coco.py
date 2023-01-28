@@ -102,7 +102,7 @@ class CocoKeypoint(data.Dataset):
 
 
 if __name__ == '__main__':
-    train = CocoKeypoint("dataset/COCO2017/", dataset="val")
+    train = CocoKeypoint("dataset/COCO2017/", dataset="train")
     print(len(train))
     t = train[0]
-    print(train.collate_fn())
+    print(t)
