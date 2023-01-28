@@ -190,7 +190,8 @@ if __name__ == "__main__":
     parser.add_argument('--data-path', default='dataset/COCO2017', help='dataset root')
 
     # 训练好的权重文件
-    parser.add_argument('--weights-path', default='pre_train/pose_coco/pose_hrnet_w32_256x192.pth', type=str, help='training weights')
+    parser.add_argument('--weights-path', default='pre_train/pose_coco/pose_hrnet_w32_256x192.pth', type=str,
+                        help='training weights')
 
     # batch size
     parser.add_argument('--batch-size', default=1, type=int, metavar='N',
