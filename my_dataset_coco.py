@@ -86,6 +86,10 @@ class CocoKeypoint(data.Dataset):
 
         image = cv2.imread(target["image_path"])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        print(image)
+        print(target)
+
         if self.transforms is not None:
             image, person_info = self.transforms(image, target)
 
