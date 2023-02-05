@@ -1,12 +1,13 @@
 import os
 import copy
 
+import transforms
 import torch
 import numpy as np
 import cv2
 import torch.utils.data as data
 from pycocotools.coco import COCO
-
+import json
 
 class CocoKeypoint(data.Dataset):
     def __init__(self,
@@ -80,19 +81,20 @@ class CocoKeypoint(data.Dataset):
 
                     self.valid_person_list.append(info)
                     obj_idx += 1
+        print("done ------------------------------------")
 
     def __getitem__(self, idx):
+        # print(idx)
         target = copy.deepcopy(self.valid_person_list[idx])
+        # target = self.valid_person_list[idx]
 
         image = cv2.imread(target["image_path"])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = np.asarray(image).transpose(-1, 0, 1)
 
-        print(image)
-        print(target)
-
-        if self.transforms is not None:
-            image, person_info = self.transforms(image, target)
-
+        # if self.transforms is not None:
+        #     image, person_info = self.transforms(image, target)
+        # print(target)
         return image, target
 
     def __len__(self):
@@ -100,13 +102,60 @@ class CocoKeypoint(data.Dataset):
 
     @staticmethod
     def collate_fn(batch):
+        batch = torch.Tensor(batch)
         imgs_tuple, targets_tuple = tuple(zip(*batch))
         imgs_tensor = torch.stack(imgs_tuple)
+        print(targets_tuple)
+        # print(len(imgs_tensor), ", ", len(targets_tuple))
         return imgs_tensor, targets_tuple
 
 
+
 if __name__ == '__main__':
-    train = CocoKeypoint("dataset/COCO2017/", dataset="train")
-    print(len(train))
-    t = train[0]
-    print(t)
+    with open('./person_keypoints.json', "r") as f:
+        person_kps_info = json.load(f)
+    # print(person_kps_info)
+    fixed_size = (256, 192)
+    heatmap_hw = (fixed_size[0] // 4, fixed_size[1] // 4)
+    kps_weights = np.array(person_kps_info["kps_weights"], dtype=np.float32).reshape((17,))
+
+    data_transform = {
+        "train": transforms.Compose([
+            # 随机裁剪半身
+            transforms.HalfBody(0.3, person_kps_info["upper_body_ids"], person_kps_info["lower_body_ids"]),
+            # 2D仿射变换
+            transforms.AffineTransform(scale=(0.65, 1.35), rotation=(-45, 45), fixed_size=fixed_size),
+            # 随机水平翻转
+            transforms.RandomHorizontalFlip(0.5, person_kps_info["flip_pairs"]),
+            # 转化热力图
+            transforms.KeypointToHeatMap(heatmap_hw=heatmap_hw, gaussian_sigma=2, keypoints_weights=kps_weights),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ]),
+        "val": transforms.Compose([
+            # 检测框放大1.25倍
+            transforms.AffineTransform(scale=(1.25, 1.25), fixed_size=fixed_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+    }
+
+
+    # train = CocoKeypoint("dataset/COCO2017/", dataset="train")
+    train_dataset = CocoKeypoint("dataset/COCO2017/", "train", transforms=data_transform["train"], fixed_size=[256, 192])
+    print(len(train_dataset))
+    t = train_dataset[0]
+    # print(t)
+
+
+    train_data_loader = data.DataLoader(train_dataset,
+                                        batch_size=64,
+                                        shuffle=True,
+                                        pin_memory=True,
+                                        num_workers=4,
+                                        collate_fn=train_dataset.collate_fn)
+    # print(train_data_loader)
+    for data in train_data_loader:
+    #     print(data.shape)
+        imgs, targets = data
+        print(imgs.shape, " ***** ", len(targets))

@@ -45,11 +45,13 @@ def main(args):
 
     with open(args.keypoints_path, "r") as f:
         person_kps_info = json.load(f)
-
+    # print(args.keypoints_path)
     fixed_size = args.fixed_size
     heatmap_hw = (args.fixed_size[0] // 4, args.fixed_size[1] // 4)
     kps_weights = np.array(person_kps_info["kps_weights"],
                            dtype=np.float32).reshape((args.num_joints,))
+
+    # print(person_kps_info["kps_weights"], "------------------------------")
     # 数据增强 √
     data_transform = {
         "train": transforms.Compose([
@@ -184,8 +186,7 @@ def main(args):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
 
     # 训练设备类型
     parser.add_argument('--device', default='cuda:0', help='device')
