@@ -447,4 +447,4 @@ class KeypointToHeatMap(object):
         target["heatmap"] = torch.as_tensor(heatmap, dtype=torch.float32)
         target["kps_weights"] = torch.as_tensor(kps_weights, dtype=torch.float32)
 
-        return image,
+        return image, target

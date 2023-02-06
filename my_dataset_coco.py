@@ -9,6 +9,7 @@ import torch.utils.data as data
 from pycocotools.coco import COCO
 import json
 
+
 class CocoKeypoint(data.Dataset):
     def __init__(self,
                  root,
@@ -84,17 +85,14 @@ class CocoKeypoint(data.Dataset):
         print("done ------------------------------------")
 
     def __getitem__(self, idx):
-        # print(idx)
         target = copy.deepcopy(self.valid_person_list[idx])
-        # target = self.valid_person_list[idx]
 
         image = cv2.imread(target["image_path"])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # image = np.asarray(image).transpose(-1, 0, 1)
 
-        # if self.transforms is not None:
-        #     image, person_info = self.transforms(image, target)
-        # print(target)
+        if self.transforms is not None:
+            image, person_info = self.transforms(image, target)
+
         return image, target
 
     def __len__(self):
@@ -102,13 +100,14 @@ class CocoKeypoint(data.Dataset):
 
     @staticmethod
     def collate_fn(batch):
-        batch = torch.Tensor(batch)
+        # batch = torch.Tensor(batch)
+        # print(type(batch))
         imgs_tuple, targets_tuple = tuple(zip(*batch))
+        # print(type(imgs_tuple[0]))
         imgs_tensor = torch.stack(imgs_tuple)
-        print(targets_tuple)
+        # print(type(imgs_tensor))
         # print(len(imgs_tensor), ", ", len(targets_tuple))
         return imgs_tensor, targets_tuple
-
 
 
 if __name__ == '__main__':
@@ -140,22 +139,23 @@ if __name__ == '__main__':
         ])
     }
 
-
     # train = CocoKeypoint("dataset/COCO2017/", dataset="train")
-    train_dataset = CocoKeypoint("dataset/COCO2017/", "train", transforms=data_transform["train"], fixed_size=[256, 192])
+    train_dataset = CocoKeypoint("dataset/sCOCO2017/", "train", transforms=data_transform["train"],
+                                 fixed_size=[256, 192])
     print(len(train_dataset))
-    t = train_dataset[0]
+    # t = train_dataset[0]
     # print(t)
 
-
     train_data_loader = data.DataLoader(train_dataset,
-                                        batch_size=64,
+                                        batch_size=32,
                                         shuffle=True,
                                         pin_memory=True,
                                         num_workers=4,
                                         collate_fn=train_dataset.collate_fn)
-    # print(train_data_loader)
-    for data in train_data_loader:
-    #     print(data.shape)
-        imgs, targets = data
-        print(imgs.shape, " ***** ", len(targets))
+
+    print(1)
+    # # print(train_data_loader)
+    # for data in train_data_loader:
+    # #     print(data.shape)
+    #     imgs, targets = data
+    #     print(imgs.shape, " ***** ", len(targets))

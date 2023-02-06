@@ -26,13 +26,12 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch,
 
     mse = KpLoss()
     mloss = torch.zeros(1).to(device)  # mean losses
+    now_lr = 0
 
     print(metric_logger.log_every(data_loader, print_freq, header))
+    print("************")
 
     for i, [images, targets] in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
-
-        print(i, "   ", images, "   ", targets)
-
         images = torch.stack([image.to(device) for image in images])
         # TODO
         # 混合精度训练上下文管理器，如果在CPU环境中不起任何作用
